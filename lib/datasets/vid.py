@@ -36,7 +36,7 @@ class vid(imdb):
         self._image_ext = '.JPEG'
         self._image_index = self._load_image_set_index()
         # Default to roidb handler
-        self._roidb_handler = self.slide_roidb
+        self._roidb_handler = self._slide_roidb
 
         # PASCAL specific config options
         self.config = {'cleanup'  : True,
@@ -147,7 +147,13 @@ class vid(imdb):
 
         return self.create_roidb_from_box_list(box_list, gt_roidb)
 
-    def slide_roidb(self):
+    def vgg_rpn_roidb(self):
+        return self._slide_roidb('vgg_rpn')
+
+    def craft_roidb(self):
+        return self._slide_roidb('craft')
+
+    def _slide_roidb(self, proposal_method):
         """
         Return the database of selective search regions of interest.
         Ground-truth ROIs are also included.
@@ -155,7 +161,7 @@ class vid(imdb):
         This function loads/saves from/to a cache file to speed up future calls.
         """
         cache_file = os.path.join(self.cache_path,
-                                  self.name + '_roidb.pkl')
+                  self.name + '_{}_roidb._pkl'.format(proposal_method))
 
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
@@ -167,17 +173,17 @@ class vid(imdb):
             gt_roidb = self.gt_roidb()
             #sio.savemat('vid_2015_train_gt_roidb.mat',{'gt_roidb': gt_roidb})
             # ss_roidb = self._load_slide_roidb(gt_roidb)
-            slide_db = self._load_slide_roidb(gt_roidb)
+            slide_db = self._load_slide_roidb(gt_roidb, proposal_method)
             roidb = imdb.merge_roidbs(gt_roidb, slide_db)
         else:
-            roidb = self._load_slide_roidb(None)
+            roidb = self._load_slide_roidb(None, proposal_method)
         with open(cache_file, 'wb') as fid:
             cPickle.dump(roidb, fid, cPickle.HIGHEST_PROTOCOL)
         print 'wrote slide roidb to {}'.format(cache_file)
 
         return roidb
 
-    def _load_slide_roidb(self, gt_roidb):
+    def _load_slide_roidb(self, gt_roidb, proposal_method):
         # load anchor boxes and shape labels(1-9)
         #filename = os.path.abspath(os.path.join(self.cache_path, '..',
         #                                        'slide_anchors_12_data',
@@ -185,8 +191,8 @@ class vid(imdb):
         box_list = []
         shape_labels = []
         filename = os.path.abspath(os.path.join(self.cache_path, '..',
-                                                'rpn_data',
-                                                self.name + '_0.75_500.mat'))
+            '{}_data'.format(proposal_method),
+            self.name + '.mat'))
         assert os.path.exists(filename), \
                'Slide anchor data not found at: {}'.format(filename)
         raw_data = sio.loadmat(filename)['boxes'].ravel()
