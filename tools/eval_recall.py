@@ -6,6 +6,7 @@ from datasets.factory import get_imdb
 import argparse
 import time, os, sys
 import numpy as np
+import zipfile
 
 def parse_args():
     """
