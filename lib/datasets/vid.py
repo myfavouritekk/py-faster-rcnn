@@ -147,6 +147,9 @@ class vid(imdb):
 
         return self.create_roidb_from_box_list(box_list, gt_roidb)
 
+    def resnet_rpn_roidb(self):
+        return self._slide_roidb('resnet_rpn')
+
     def vgg_rpn_roidb(self):
         return self._slide_roidb('vgg_rpn')
 
