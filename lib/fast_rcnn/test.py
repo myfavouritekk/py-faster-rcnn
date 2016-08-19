@@ -45,7 +45,9 @@ def _get_image_blob(im):
         # Prevent the biggest axis from being more than MAX_SIZE
         if np.round(im_scale * im_size_max) > cfg.TEST.MAX_SIZE:
             im_scale = float(cfg.TEST.MAX_SIZE) / float(im_size_max)
-        im = cv2.resize(im_orig, None, None, fx=im_scale, fy=im_scale,
+        target_shape = [im_scale * im_shape[0], im_scale * im_shape[1]]
+        target_shape = map(lambda l:int(min(l, cfg.TEST.MAX_SIZE)), target_shape)
+        im = cv2.resize(im_orig, tuple(target_shape), None,
                         interpolation=cv2.INTER_LINEAR)
         im_scale_factors.append(im_scale)
         processed_ims.append(im)
