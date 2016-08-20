@@ -144,7 +144,6 @@ def im_detect(net, im, boxes=None):
         net.blobs['im_info'].reshape(*(blobs['im_info'].shape))
     else:
         net.blobs['rois'].reshape(*(blobs['rois'].shape))
-        print blobs['rois'].shape
 
     # do forward
     forward_kwargs = {'data': blobs['data'].astype(np.float32, copy=False)}
@@ -152,8 +151,6 @@ def im_detect(net, im, boxes=None):
         forward_kwargs['im_info'] = blobs['im_info'].astype(np.float32, copy=False)
     else:
         forward_kwargs['rois'] = blobs['rois'].astype(np.float32, copy=False)
-    import time
-    print forward_kwargs.keys()
     blobs_out = net.forward(**forward_kwargs)
 
     if cfg.TEST.HAS_RPN:
