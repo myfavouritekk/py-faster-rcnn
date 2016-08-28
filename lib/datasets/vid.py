@@ -172,14 +172,7 @@ class vid(imdb):
             print '{} slide roidb loaded from {}'.format(self.name, cache_file)
             return roidb
 
-        if self._image_set != 'test' and self._image_set != 'val2':
-            gt_roidb = self.gt_roidb()
-            #sio.savemat('vid_2015_train_gt_roidb.mat',{'gt_roidb': gt_roidb})
-            # ss_roidb = self._load_slide_roidb(gt_roidb)
-            slide_db = self._load_slide_roidb(gt_roidb, proposal_method)
-            roidb = imdb.merge_roidbs(gt_roidb, slide_db)
-        else:
-            roidb = self._load_slide_roidb(None, proposal_method)
+        roidb = self._load_slide_roidb(None, proposal_method)
         with open(cache_file, 'wb') as fid:
             cPickle.dump(roidb, fid, cPickle.HIGHEST_PROTOCOL)
         print 'wrote slide roidb to {}'.format(cache_file)

@@ -267,12 +267,12 @@ def test_net(net, imdb, max_per_image=100, boxes_num_per_batch=0, vis=False):
         _t['im_detect'].tic()
         if boxes_num_per_batch != 0:
             boxes_num_per_batch = float(boxes_num_per_batch)
-            num_boxes = roidb[i]['boxes'].shape[0]
+            num_boxes = box_proposals.shape[0]
             num_batch = math.ceil(num_boxes/boxes_num_per_batch)
             scores_batch = np.zeros((num_batch*boxes_num_per_batch,imdb.num_classes),dtype=np.float32)
             boxes_batch = np.zeros((num_batch*boxes_num_per_batch,4*imdb.num_classes),dtype=np.float32)
-            rois = np.tile(roidb[i]['boxes'][0,:],(num_batch*boxes_num_per_batch,1))
-            rois[:num_boxes,:] = roidb[i]['boxes']
+            rois = np.tile(box_proposals[0,:],(num_batch*boxes_num_per_batch,1))
+            rois[:num_boxes,:] = box_proposals
             for j in xrange(int(num_batch)):
                 roi = rois[j*boxes_num_per_batch:(j+1)*boxes_num_per_batch,:]
                 score, box = im_detect(net, im, roi)
