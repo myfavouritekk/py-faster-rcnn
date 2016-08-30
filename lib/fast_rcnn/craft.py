@@ -139,10 +139,12 @@ def im_detect(net, im, boxes=None):
             dtype=np.float32)
 
     # reshape network inputs
+    assert net.blobs['data'].data.shape == blobs['data'].shape
     net.blobs['data'].reshape(*(blobs['data'].shape))
     if cfg.TEST.HAS_RPN:
         net.blobs['im_info'].reshape(*(blobs['im_info'].shape))
     else:
+        assert net.blobs['rois'].data.shape == blobs['rois'].shape
         net.blobs['rois'].reshape(*(blobs['rois'].shape))
 
     # do forward
