@@ -226,9 +226,11 @@ def apply_nms(all_boxes, thresh):
             nms_boxes[cls_ind][im_ind] = dets[keep, :].copy()
     return nms_boxes
 
-def test_net(net, imdb, max_per_image=100, boxes_num_per_batch=0, vis=False):
+def test_net(net, imdb, max_per_image=100, boxes_num_per_batch=0, vis=False,
+        st=0, ed=np.inf):
     """Test a Fast R-CNN network on an image database."""
     num_images = len(imdb.image_index)
+    if ed >= num_images: ed = num_images
     # all detections are collected into:
     #    all_boxes[cls][image] = N x 5 array of detections in
     #    (x1, y1, x2, y2, score)
@@ -254,6 +256,7 @@ def test_net(net, imdb, max_per_image=100, boxes_num_per_batch=0, vis=False):
         roidb = imdb.roidb
 
     for i in xrange(num_images):
+        if i < st or i >= ed: continue
         # filter out any ground truth boxes
         if cfg.TEST.HAS_RPN:
             box_proposals = None
@@ -321,13 +324,17 @@ def test_net(net, imdb, max_per_image=100, boxes_num_per_batch=0, vis=False):
 
     for j in xrange(1, imdb.num_classes):
         for i in xrange(num_images):
+            if i < st or i >= ed: continue
             inds = np.where(all_boxes[j][i][:, -1] > thresh[j])[0]
             all_boxes[j][i] = all_boxes[j][i][inds, :]
 
 
-    det_file = os.path.join(output_dir, 'detections.pkl')
+    det_file = os.path.join(output_dir,
+        'detections_{:06d}_{:06d}.pkl'.format(st, ed))
     with open(det_file, 'wb') as f:
         cPickle.dump(all_boxes, f, cPickle.HIGHEST_PROTOCOL)
 
     print 'Evaluating detections'
-    imdb.evaluate_detections(all_boxes, output_dir)
+    res_file = os.path.join(output_dir,
+        'submission_{:06d}_{:06d}.txt'.format(st, ed))
+    imdb.evaluate_detections(all_boxes, res_file)
