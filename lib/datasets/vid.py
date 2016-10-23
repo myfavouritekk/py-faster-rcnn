@@ -283,17 +283,8 @@ class vid(imdb):
                 'flipped' : False,
                 'seg_areas': seg_areas}
 
-    def _write_ilsvrc_results_file(self, all_boxes):
-        use_salt = self.config['use_salt']
-        comp_id = 'comp4'
-        if use_salt:
-            comp_id += '-{}'.format(os.getpid())
+    def _write_ilsvrc_results_file(self, all_boxes, filename):
 
-        # VOCdevkit/results/VOC2007/Main/comp4-44503_det_test_aeroplane.txt
-        path = os.path.join(self._devkit_path, 'results', self._image_set,
-                            comp_id + '_')
-
-        filename = path + 'vid_' + self._image_set + '.txt'
         save_dir = os.path.dirname(filename)
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
@@ -313,7 +304,6 @@ class vid(imdb):
                                 format(im_ind+1, cls_ind, dets[k, -1],
                                        dets[k, 0] + 1, dets[k, 1] + 1,
                                        dets[k, 2] + 1, dets[k, 3] + 1))
-        return comp_id
 
     def _do_matlab_eval(self, comp_id, output_dir='output'):
         rm_results = self.config['cleanup']
@@ -329,9 +319,8 @@ class vid(imdb):
         print('Running:\n{}'.format(cmd))
         status = subprocess.call(cmd, shell=True)
 
-    def evaluate_detections(self, all_boxes, output_dir):
-        comp_id = self._write_ilsvrc_results_file(all_boxes)
-        #self._do_matlab_eval(comp_id, output_dir)
+    def evaluate_detections(self, all_boxes, res_file):
+        self._write_ilsvrc_results_file(all_boxes, res_file)
 
     def competition_mode(self, on):
         if on:

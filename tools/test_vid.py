@@ -43,8 +43,12 @@ def parse_args():
     parser.add_argument('--imdb', dest='imdb_name',
                         help='dataset to test',
                         default='vid_2015_val_20', type=str)
-    parser.add_argument('--comp', dest='comp_mode', help='competition mode',
-                        action='store_true')
+    parser.add_argument('--start_idx',
+                        help='Start index for testing. [0]',
+                        default=0, type=int)
+    parser.add_argument('--stop_idx',
+                        help='Stop index for testing. [Inf]',
+                        default=np.inf, type=int)
     parser.add_argument('--set', dest='set_cfgs',
                         help='set config keys', default=None,
                         nargs=argparse.REMAINDER)
@@ -113,4 +117,6 @@ if __name__ == '__main__':
     if not cfg.TEST.HAS_RPN:
         imdb.set_proposal_method(cfg.TEST.PROPOSAL_METHOD)
 
-    test_net(net, imdb, max_per_image=args.max_per_image, boxes_num_per_batch=args.boxes_num_per_batch, vis=args.vis)
+    test_net(net, imdb, max_per_image=args.max_per_image,
+            boxes_num_per_batch=args.boxes_num_per_batch,
+            vis=args.vis, st=args.start_idx, ed=args.stop_idx)
