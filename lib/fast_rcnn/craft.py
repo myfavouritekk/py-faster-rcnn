@@ -105,6 +105,28 @@ def _get_blobs(im, rois):
         blobs['rois'] = _get_rois_blob(rois, im_scale_factors)
     return blobs, im_scale_factors
 
+def _get_sequence_blobs(imgs, rois):
+    """Convert a list of images and RoIs within that image into network inputs."""
+    blobs = {'data' : None, 'rois' : None}
+    data = []
+    im_scale_factors = []
+    seq_rois = []
+    for idx, im in enumerate(imgs):
+        cur_data, cur_im_scale_factors = _get_image_blob(im)
+        if not cfg.TEST.HAS_RPN:
+            cur_rois = _get_rois_blob(rois, cur_im_scale_factors)
+            cur_rois[:,0] = idx
+        data.append(cur_data)
+        im_scale_factors.append(cur_im_scale_factors)
+        seq_rois.append(cur_rois)
+    blobs['data'] = np.vstack(data)
+    seq_rois = np.vstack(seq_rois)
+    # swap axis to make sure the same roi that cooresponse to different
+    # images are adjacent: from (n x k) x 5 -> (k x n) x 5
+    blobs['rois'] = seq_rois.reshape((len(imgs), -1, 5)).swapaxes(0,1).reshape((-1,5))
+    im_scale_factors = np.vstack(im_scale_factors)
+    return blobs, im_scale_factors
+
 def im_detect(net, im, boxes=None):
     """Detect object classes in an image given object proposals.
 
@@ -198,7 +220,7 @@ def sequence_im_detect(net, imgs, boxes=None):
             background as object category 0)
         boxes (ndarray): R x (4*K) array of predicted bounding boxes
     """
-    blobs, im_scales = _get_sequence_blobs([im1, im2], boxes)
+    blobs, im_scales = _get_sequence_blobs(imgs, boxes)
 
     # When mapping from image ROIs to feature map ROIs, there's some aliasing
     # (some distinct image ROIs get mapped to the same feature ROI).
@@ -253,9 +275,10 @@ def sequence_im_detect(net, imgs, boxes=None):
         # Apply bounding-box regression deltas
         box_deltas = blobs_out['bbox_pred']
         pred_boxes = []
-        for img in imgs[1:]:
+        for im in imgs[1:]:
             cur_pred_boxes = bbox_transform_inv(boxes, box_deltas)
             pred_boxes.append(clip_boxes(cur_pred_boxes, im.shape))
+        pred_boxes = np.vstack(pred_boxes)
     else:
         # Simply repeat the boxes, once for each class
         pred_boxes = np.tile(boxes, (1, scores.shape[1]))
