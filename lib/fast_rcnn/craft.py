@@ -274,11 +274,7 @@ def sequence_im_detect(net, imgs, boxes=None):
     if cfg.TEST.BBOX_REG:
         # Apply bounding-box regression deltas
         box_deltas = blobs_out['bbox_pred']
-        pred_boxes = []
-        for im in imgs[1:]:
-            cur_pred_boxes = bbox_transform_inv(boxes, box_deltas)
-            pred_boxes.append(clip_boxes(cur_pred_boxes, im.shape))
-        pred_boxes = np.vstack(pred_boxes)
+        pred_boxes = clip_boxes(bbox_transform_inv(boxes, box_deltas), imgs[0].shape)
     else:
         # Simply repeat the boxes, once for each class
         pred_boxes = np.tile(boxes, (1, scores.shape[1]))
